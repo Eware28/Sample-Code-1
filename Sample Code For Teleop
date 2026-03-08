@@ -1,0 +1,216 @@
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+@TeleOp(name = "TeleOpShooting SingleShot with multi controls")
+public class Teleop_continous2intakemotors4WD extends LinearOpMode {
+
+    // ====== DRIVE HARDWARE ======
+    private DcMotor FrontLeftDC, FrontRightDC, BackLeftDC, BackRightDC;
+
+    // ====== SHOOTER HARDWARE ======
+    private DcMotor TopShootingDC;
+    private CRServo RightServo, LeftServo;
+
+    // ====== INTAKE HARDWARE ======
+    private DcMotor LeftIntakeDC;
+    private DcMotor RightIntakeDC;   // NEW INTAKE MOTOR
+
+    // ====== SHOOTER SETTINGS ======
+    private double shooterPower = 0.00;
+    private static final double FEED_PWR = 1.0;
+
+    private static final long SPINUP_MS   = 3000;
+    private static final long FEED_MS     = 2000;
+    private static final long COOLDOWN_MS = 5000;
+
+    private enum ShooterState { IDLE, SPINUP, FEED, COOLDOWN }
+    private ShooterState shooterState = ShooterState.IDLE;
+    private final ElapsedTime shotTimer = new ElapsedTime();
+
+    // Intake toggle
+    private boolean intakeOn = false;
+
+    @Override
+    public void runOpMode() {
+
+        // ====== HARDWARE MAPPING ======
+        FrontLeftDC  = hardwareMap.get(DcMotor.class, "FrontLeftDC");
+        FrontRightDC = hardwareMap.get(DcMotor.class, "FrontRightDC");
+        BackLeftDC   = hardwareMap.get(DcMotor.class, "BackLeftDC");
+        BackRightDC  = hardwareMap.get(DcMotor.class, "BackRightDC");
+
+        TopShootingDC = hardwareMap.get(DcMotor.class, "TopShootingDC");
+        RightServo = hardwareMap.get(CRServo.class, "RightServo");
+        LeftServo  = hardwareMap.get(CRServo.class, "LeftServo");
+
+        LeftIntakeDC  = hardwareMap.get(DcMotor.class, "LeftIntakeDC");
+        RightIntakeDC = hardwareMap.get(DcMotor.class, "RightIntakeDC");   // UPDATED
+
+        // ====== MOTOR DIRECTIONS ======
+        FrontLeftDC.setDirection(DcMotor.Direction.REVERSE);
+        BackLeftDC.setDirection(DcMotor.Direction.REVERSE);
+        FrontRightDC.setDirection(DcMotor.Direction.FORWARD);
+        BackRightDC.setDirection(DcMotor.Direction.FORWARD);
+
+        FrontLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FrontRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BackLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BackRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        TopShootingDC.setDirection(DcMotor.Direction.REVERSE);
+        TopShootingDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        RightServo.setDirection(CRServo.Direction.REVERSE);
+        LeftServo.setDirection(CRServo.Direction.FORWARD);
+
+        LeftIntakeDC.setDirection(DcMotor.Direction.FORWARD);
+        LeftIntakeDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        RightIntakeDC.setDirection(DcMotor.Direction.FORWARD);   // UPDATED
+        RightIntakeDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        telemetry.addLine("READY");
+        telemetry.update();
+
+        waitForStart();
+
+        while (opModeIsActive()) {
+
+            // -------------------------------------------------------------
+            // 1) 4-WHEEL MECANUM DRIVE
+            // -------------------------------------------------------------
+            double drive  = -gamepad1.left_stick_y;
+            double strafe =  gamepad1.left_stick_x;
+            double turn   =  gamepad1.right_stick_x;
+
+            if (Math.abs(drive) < 0.05)  drive = 0;
+            if (Math.abs(strafe) < 0.05) strafe = 0;
+            if (Math.abs(turn) < 0.05)   turn = 0;
+
+            double fl = drive + strafe + turn;
+            double fr = drive - strafe - turn;
+            double bl = drive - strafe + turn;
+            double br = drive + strafe - turn;
+
+            double max = Math.max(Math.max(Math.abs(fl), Math.abs(fr)),
+                                  Math.max(Math.abs(bl), Math.abs(br)));
+
+            if (max > 1.0) {
+                fl /= max; fr /= max; bl /= max; br /= max;
+            }
+
+            FrontLeftDC.setPower(fl);
+            FrontRightDC.setPower(fr);
+            BackLeftDC.setPower(bl);
+            BackRightDC.setPower(br);
+
+            // -------------------------------------------------------------
+            // 2) INTAKE CONTROL (BOTH MOTORS)
+            // -------------------------------------------------------------
+
+            // Left bumper → intake ON (continuous)
+            if (gamepad1.left_bumper) {
+                intakeOn = true;
+            }
+
+            // Right trigger → intake OFF
+            if (gamepad1.right_trigger > 0.2) {
+                intakeOn = false;
+            }
+
+            // Right bumper → intake OUT (reverse override)
+            if (gamepad1.right_bumper) {
+                LeftIntakeDC.setPower(-1.0);
+                RightIntakeDC.setPower(-1.0);
+            }
+            else if (intakeOn) {
+                LeftIntakeDC.setPower(1.0);
+                RightIntakeDC.setPower(1.0);
+            }
+            else {
+                LeftIntakeDC.setPower(0);
+                RightIntakeDC.setPower(0);
+            }
+
+            // -------------------------------------------------------------
+            // 3) SHOOTER POWER BUTTONS
+            // -------------------------------------------------------------
+            if (gamepad1.x) {
+                shooterPower = 0.45;
+            } else if (gamepad1.y) {
+                shooterPower = 0.5;
+            } else if (gamepad1.b) {
+                shooterPower = 0.6;
+            } else if (gamepad1.a) {
+                shooterPower = 0.7;
+            } else if (gamepad1.right_bumper) {
+                shooterPower = 0.55;
+            }
+
+            double manualFeed = gamepad1.left_trigger;
+
+            if (shooterState == ShooterState.IDLE) {
+                TopShootingDC.setPower(shooterPower);
+                setFeedPower(manualFeed);
+            }
+
+            // -------------------------------------------------------------
+            // 4) SHOOTER STATE MACHINE
+            // -------------------------------------------------------------
+            switch (shooterState) {
+                case SPINUP:
+                    if (shotTimer.milliseconds() >= SPINUP_MS) {
+                        shooterState = ShooterState.FEED;
+                        shotTimer.reset();
+                        setFeedPower(FEED_PWR);
+                    }
+                    break;
+
+                case FEED:
+                    if (shotTimer.milliseconds() >= FEED_MS) {
+                        shooterState = ShooterState.COOLDOWN;
+                        shotTimer.reset();
+                        setFeedPower(0);
+                        TopShootingDC.setPower(0);
+                    }
+                    break;
+
+                case COOLDOWN:
+                    if (shotTimer.milliseconds() >= COOLDOWN_MS) {
+                        shooterState = ShooterState.IDLE;
+                    }
+                    break;
+
+                case IDLE:
+                default:
+                    break;
+            }
+
+            telemetry.addData("Intake", intakeOn ? "ON" : "OFF");
+            telemetry.addData("Shooter State", shooterState);
+            telemetry.update();
+
+            idle();
+        }
+
+        // Safety stop
+        FrontLeftDC.setPower(0);
+        FrontRightDC.setPower(0);
+        BackLeftDC.setPower(0);
+        BackRightDC.setPower(0);
+
+        TopShootingDC.setPower(0);
+        setFeedPower(0);
+
+        LeftIntakeDC.setPower(0);
+        RightIntakeDC.setPower(0);
+    }
+
+    private void setFeedPower(double pwr) {
+        RightServo.setPower(pwr);
+        LeftServo.setPower(pwr);
+    }
+}
