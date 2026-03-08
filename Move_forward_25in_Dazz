@@ -4,45 +4,63 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@Autonomous(name = "moving_25_in_forward")
-public class moving_25_in_forward_dazz extends LinearOpMode {
+@Autonomous(name = "Move 25 Inches")
+public class Move25In extends LinearOpMode {
 
-    private DcMotor FrontLeftDC;
-    private DcMotor FrontRightDC;
-    private DcMotor BackLeftDC;
-    private DcMotor BackRightDC;
+    private DcMotor FrontLeftDC, FrontRightDC, BackLeftDC, BackRightDC;
+
+    static final double TICKS_PER_REV = 537.6;
+    static final double WHEEL_DIAMETER = 3.78; // inches
+    static final double TICKS_PER_INCH = TICKS_PER_REV / (Math.PI * WHEEL_DIAMETER);
 
     @Override
     public void runOpMode() {
 
-        BackLeftDC  = hardwareMap.get(DcMotor.class, "BackLeftDC");
-        BackRightDC = hardwareMap.get(DcMotor.class, "BackRightDC");
+        FrontLeftDC  = hardwareMap.get(DcMotor.class, "FrontLeftDC");
         FrontRightDC = hardwareMap.get(DcMotor.class, "FrontRightDC");
-        FrontLeftDC = hardwareMap.get(DcMotor.class, "FrontLeftDC");
+        BackLeftDC   = hardwareMap.get(DcMotor.class, "BackLeftDC");
+        BackRightDC  = hardwareMap.get(DcMotor.class, "BackRightDC");
 
         FrontLeftDC.setDirection(DcMotor.Direction.REVERSE);
         BackLeftDC.setDirection(DcMotor.Direction.REVERSE);
-        FrontRightDC.setDirection(DcMotor.Direction.FORWARD);
-        BackRightDC.setDirection(DcMotor.Direction.FORWARD);
 
         FrontLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         FrontRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         BackLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         BackRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        int moveTicks = (int)(25 * TICKS_PER_INCH);
+
+        FrontLeftDC.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        FrontRightDC.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        BackLeftDC.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        BackRightDC.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        FrontLeftDC.setTargetPosition(moveTicks);
+        FrontRightDC.setTargetPosition(moveTicks);
+        BackLeftDC.setTargetPosition(moveTicks);
+        BackRightDC.setTargetPosition(moveTicks);
+
+        FrontLeftDC.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FrontRightDC.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        BackLeftDC.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        BackRightDC.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
         waitForStart();
 
-        // Move forward
         FrontLeftDC.setPower(0.5);
         FrontRightDC.setPower(0.5);
-        BackRightDC.setPower(-0.5);
-        BackLeftDC.setPower(-0.5);
-        sleep(1000);
+        BackLeftDC.setPower(0.5);
+        BackRightDC.setPower(0.5);
+
+        while (opModeIsActive() &&
+                (FrontLeftDC.isBusy() || FrontRightDC.isBusy())) {
+        }
 
         FrontLeftDC.setPower(0);
         FrontRightDC.setPower(0);
-        BackRightDC.setPower(0);
         BackLeftDC.setPower(0);
-        sleep(300);
+        BackRightDC.setPower(0);
     }
 }
+
