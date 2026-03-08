@@ -2,47 +2,50 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@Autonomous(name = "moving_25_in._forward")
-public class moving_25_in._forward extends LinearOpMode {
+@Autonomous(name = "moving_25_in_forward")
+public class moving_25_in_forward extends LinearOpMode {
 
-private DcMotor FrontLeftDC;
-private DcMotor FrontRightDC;
-private DcMotor BackLeftDC;
-private DcMotor BackRightDC; 
+    private DcMotor FrontLeftDC;
+    private DcMotor FrontRightDC;
+    private DcMotor BackLeftDC;
+    private DcMotor BackRightDC;
 
- BackLeftDC  = hardwareMap.get(DcMotor.class, "BackLeftDC");
- BackRightDC = hardwareMap.get(DcMotor.class, "BackRightDC");
- FrontRightDC = hardwareMap.get(DcMotor.class, "FrontRightDC");
- FrontLeftDC = hardwareMap.get(DcMotor.class, "FrontLeftDC");
+    @Override
+    public void runOpMode() {
 
+        BackLeftDC = hardwareMap.get(DcMotor.class, "BackLeftDC");
+        BackRightDC = hardwareMap.get(DcMotor.class, "BackRightDC");
+        FrontRightDC = hardwareMap.get(DcMotor.class, "FrontRightDC");
+        FrontLeftDC = hardwareMap.get(DcMotor.class, "FrontLeftDC");
 
-FrontLeftDC.setDirection(DcMotor.Direction.REVERSE);
-  BackLeftDC.setDirection(DcMotor.Direction.REVERSE);
-  FrontRightDC.setDirection(DcMotor.Direction.FORWARD);
-  BackRightDC.setDirection(DcMotor.Direction.FORWARD);
+        FrontLeftDC.setDirection(DcMotor.Direction.REVERSE);
+        BackLeftDC.setDirection(DcMotor.Direction.REVERSE);
 
-  FrontLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-  FrontRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-  BackLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-  BackRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FrontRightDC.setDirection(DcMotor.Direction.FORWARD);
+        BackRightDC.setDirection(DcMotor.Direction.FORWARD);
 
-waitForStart();
+        FrontLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FrontRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BackLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BackRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-//-------------------------------
-// Move forward
-//-------------------------------
+        waitForStart();
 
-FrontLeftDC.setPower(0.5);
-FrontRightDC.setPower(0.5);
-BackRightDC.setPower(-0.5);
-BackLeftDC.setPower(-0.5);
-sleep(1000);
+        // Move forward
+        FrontLeftDC.setPower(0.5);
+        FrontRightDC.setPower(0.5);
+        BackLeftDC.setPower(0.5);
+        BackRightDC.setPower(0.5);
 
-FrontLeftDC.setPower(0);
-FrontRightDC.setPower(0);
-BackRightDC.setPower(0);
-BackLeftDC.setPower(0);
-sleep(300);
+        sleep(1000);
+
+        FrontLeftDC.setPower(0);
+        FrontRightDC.setPower(0);
+        BackLeftDC.setPower(0);
+        BackRightDC.setPower(0);
+
+        sleep(300);
+    }
+}
