@@ -1,0 +1,47 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
+@Autonomous (name = "Autonomous_Code")
+public class Autonomous_Code extends LinearOpMode {
+
+ private DcMotor BackLeftDC;
+ private DcMotor BackRightDC;
+ private DcMotor FrontLeftDC;
+ private DcMotor FrontRightDC;
+
+BackLeftDCMotor  = hardwareMap.get(DcMotor.class, "BackLeftDC");
+BackRightDCMotor = hardwareMap.get(DcMotor.class, "BackRightDC");
+FrontRightDCMotor = hardwareMap.get(DcMotor.class, "FrontRightDC");
+FrontLeftDCMotor  = hardwareMap.get(DcMotor.class, "FrontLeftDC");
+
+    FrontLeftDC.setDirection(DcMotor.Direction.REVERSE);
+        BackLeftDC.setDirection(DcMotor.Direction.REVERSE);
+        FrontRightDC.setDirection(DcMotor.Direction.FORWARD);
+        BackRightDC.setDirection(DcMotor.Direction.FORWARD);
+
+        FrontLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FrontRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BackLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BackRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+waitForStart();
+    
+// -------------------------------
+// Move forward
+// -------------------------------
+
+FrontLeftDC.setPower(0.5);
+FrontRightDC.setPower(0.5);
+BackRightDC.setPower(-0.5);
+BackLeftDC.setPower(-0.5);
+sleep(1000);
+
+FrontLeftDC.setPower(0);
+FrontRightDC.setPower(0);
+BackRightDC.setPower(0);
+BackLeftDC.setPower(0);
+}
